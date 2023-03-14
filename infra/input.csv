@@ -1,0 +1,11 @@
+id,first_name,last_name,customer_reference,status
+1,Alex,Richard,ade3-11ed,Active
+
+id,customer_reference,order_status,order_reference,order_timestamp
+1,ade3-11ed,Delivered,dc0aa69c,1676539508
+2,ade3-11ed,Delivered,dc0ab1aa,1676539608
+
+id,order_reference,item_name,quantity,total_price
+1,dc0aa69c,XYZ,2,20
+2,dc0aa69c,ABC,1,55
+3,dc0ab1aa,BBB,1,12.5
