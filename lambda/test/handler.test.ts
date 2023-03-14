@@ -1,77 +1,57 @@
+import { S3Handler } from 'aws-lambda';
 import { handler } from '../index';
-import { S3 } from 'aws-sdk';
+import * as s3Helper from '../src/s3Helper';
+import * as customerDataProcessor from '../src/customerDataProcessor';
+import createMockContext from 'aws-lambda-mock-context';
 
-describe('handler function', () => {
-  class MockS3 extends S3 {
-    public listObjectsV2 = jest.fn().mockImplementation(() => {
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Contents: [
-            { Key: 'customers_2022-01-01.csv' },
-            { Key: 'orders_2022-01-01.csv' },
-            { Key: 'items_2022-01-01.csv' },
-          ],
-        }),
-      };
-    });
+jest.mock('../src/s3Helper');
+jest.mock('../src/customerDataProcessor');
 
-    // Add other mock methods here
-  }
+const mockAllRequiredFilesExist = s3Helper.allRequiredFilesExist as jest.Mock;
+const mockFetchAndParseCsvDataFromS3 =
+  s3Helper.fetchAndParseCsvDataFromS3 as jest.Mock;
+const mockCalculateTotalAmountSpentByCustomer =
+  customerDataProcessor.calculateTotalAmountSpentByCustomer as jest.Mock;
+const mockProcessAndSendMessages =
+  customerDataProcessor.processAndSendMessages as jest.Mock;
 
-  const mockS3 = new MockS3();
+describe('handler', () => {
+  const s3Event = {
+    Records: [
+      {
+        s3: {
+          bucket: {
+            name: 'test-bucket',
+          },
+          object: {
+            key: 'test-key',
+          },
+        },
+      },
+    ],
+  };
 
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should call listObjectsV2 method of S3 service with correct arguments', async () => {
-    const event = {
-      Records: [
-        {
-          s3: { bucket: { name: 'test-bucket' }, object: { key: 'test-key' } },
-        },
-      ],
-    };
-    const context = {};
-
-    await handler(event, context, { s3: mockS3 });
-
-    expect(mockS3.listObjectsV2).toHaveBeenCalledWith({
-      Bucket: 'test-bucket',
+  it('should process and send customer data messages', async () => {
+    mockAllRequiredFilesExist.mockResolvedValue(true);
+    mockFetchAndParseCsvDataFromS3.mockResolvedValue({
+      customers: [],
+      orders: [],
+      items: [],
     });
+    mockCalculateTotalAmountSpentByCustomer.mockReturnValue([]);
+    mockProcessAndSendMessages.mockResolvedValue(undefined);
+
+    const context = createMockContext();
+
+    await handler(s3Event as any, context, () => {});
+
+    expect(mockAllRequiredFilesExist).toHaveBeenCalledTimes(1);
+    expect(mockFetchAndParseCsvDataFromS3).toHaveBeenCalledTimes(1);
+    expect(mockCalculateTotalAmountSpentByCustomer).toHaveBeenCalledTimes(1);
+    expect(mockProcessAndSendMessages).toHaveBeenCalledTimes(1);
   });
-
-  it('should handle missing files when some required CSV files are missing', async () => {
-    class MockS3 extends S3 {
-      public listObjectsV2 = jest.fn().mockImplementation(() => {
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Contents: [
-              { Key: 'customers_2022-01-01.csv' },
-              { Key: 'orders_2022-01-01.csv' },
-            ],
-          }),
-        };
-      });
-    }
-    const mockS3 = new MockS3();
-
-    const event = {
-      Records: [
-        {
-          s3: { bucket: { name: 'test-bucket' }, object: { key: 'test-key' } },
-        },
-      ],
-    };
-    const context = {};
-
-    await handler(event, context, { s3: mockS3 });
-
-    expect(mockS3.listObjectsV2).toHaveBeenCalledWith({
-      Bucket: 'test-bucket',
-    });
-    // Add more expectations here for the behavior of the function when some files are missing
-  });
-
-  // Add more test cases here
 });

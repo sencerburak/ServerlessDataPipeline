@@ -7,3 +7,5 @@ dist
 terraform.tfstate*
 mind.txt
 *.zip
+package-lock.json
+```

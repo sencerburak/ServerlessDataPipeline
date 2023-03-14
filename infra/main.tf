@@ -1,18 +1,18 @@
 provider "aws" {
-  region = "eu-west-2"
+  region = var.region
 }
 
 resource "aws_s3_bucket" "input_bucket" {
-  bucket = "lambda-ingress-bucket"
+  bucket = var.bucket_name
   acl    = "private"
 }
 
 resource "aws_sqs_queue" "output_queue" {
-  name = "output-queue"
+  name = var.queue_name
 }
 
 resource "aws_dynamodb_table" "processed_data" {
-  name         = "processed_data"
+  name         = var.dynamodb_table_name
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "hash"
 
@@ -37,8 +37,6 @@ resource "aws_dynamodb_table" "processed_data" {
     projection_type = "ALL"
   }
 }
-
-
 
 resource "aws_iam_user" "uploader" {
   name = "uploader"
@@ -99,11 +97,12 @@ resource "aws_lambda_permission" "allow_bucket" {
 
 resource "aws_lambda_function" "processor" {
   filename      = "csv-parser.zip"
-  function_name = "processor"
+  function_name = var.lambda_function_name
   role          = aws_iam_role.lambda_role.arn
-  handler       = "index.handler"
-  runtime       = "nodejs14.x"
-  timeout       = 60
+  handler       = var.lambda_handler
+  runtime       = var.lambda_runtime
+  memory_size   = var.lambda_memory_size
+  timeout       = var.lambda_timeout
   environment {
     variables = {
       S3_BUCKET      = aws_s3_bucket.input_bucket.id
@@ -111,11 +110,6 @@ resource "aws_lambda_function" "processor" {
       DYNAMODB_TABLE = aws_dynamodb_table.processed_data.name
     }
   }
-
-  depends_on = [
-    aws_s3_bucket_object.input_file,
-  ]
-
 }
 
 resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
@@ -123,7 +117,7 @@ resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
   lambda_function {
     lambda_function_arn = aws_lambda_function.processor.arn
     events              = ["s3:ObjectCreated:*"]
-    filter_prefix = "customers_"
+    filter_prefix       = "customers_"
   }
 
 
@@ -132,12 +126,6 @@ resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
     aws_lambda_function.processor,
     aws_lambda_permission.allow_bucket
   ]
-}
-
-resource "aws_s3_bucket_object" "input_file" {
-  bucket = aws_s3_bucket.input_bucket.id
-  key    = "input.csv"
-  source = "input.csv"
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
