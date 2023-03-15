@@ -12,6 +12,7 @@
     "upload1": "aws s3 cp data/items_20220130.csv s3://lambda-ingress-bucket/ && aws s3 cp data/orders_20220130.csv s3://lambda-ingress-bucket/ && aws s3 cp data/customers_20220130.csv s3://lambda-ingress-bucket/",
     "upload2": "aws s3 cp data/items_20220131.csv s3://lambda-ingress-bucket/ && aws s3 cp data/orders_20220131.csv s3://lambda-ingress-bucket/ && aws s3 cp data/customers_20220131.csv s3://lambda-ingress-bucket/",
     "integration": "npm run format && npm run build && npm run package && npm run purgeAll && npm run tf-destroy-lambda && npm run tf-apply",
+    "tf-init": "terraform -chdir='../infra/' init -auto-approve",
     "tf-apply": "terraform -chdir='../infra/' apply -auto-approve",
     "tf-destroy-lambda": "terraform -chdir='../infra/' destroy --target=aws_lambda_function.processor -auto-approve",
     "test": "jest test/*.test.ts",
