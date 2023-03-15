@@ -1,4 +1,5 @@
 import { SQS } from 'aws-sdk';
+import { sqsQueueUrl, region } from '../config';
 
 /**
  * Sends a message to an SQS queue.
@@ -7,10 +8,8 @@ import { SQS } from 'aws-sdk';
 export async function sendSQSMessage(message: any) {
   console.log('Sending message to SQS', JSON.stringify(message));
 
-  const sqs = new SQS({ apiVersion: '2012-11-05', region: 'eu-west-2' });
-  const queueUrl =
-    process.env.SQS_QUEUE_URL ??
-    'https://sqs.eu-west-2.amazonaws.com/264231384781/output-queue';
+  const sqs = new SQS({ apiVersion: '2012-11-05', region: region });
+  const queueUrl = process.env.SQS_QUEUE_URL ?? sqsQueueUrl;
   const params: SQS.SendMessageRequest = {
     MessageBody: JSON.stringify(message),
     QueueUrl: queueUrl,

@@ -1,8 +1,9 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { dynamoDBTableName, region } from '../config';
 
 const dynamoDBClient = new DocumentClient({
   apiVersion: '2012-08-10',
-  region: 'eu-west-2',
+  region: region,
 });
 
 /**
@@ -16,7 +17,7 @@ const dynamoDBClient = new DocumentClient({
 export async function putMessageToDB(message: any, identifier: string) {
   console.log('Putting message to DB', JSON.stringify(message));
   const params: DocumentClient.PutItemInput = {
-    TableName: 'processed_data',
+    TableName: dynamoDBTableName,
     Item: {
       hash: identifier.toString(),
       customer_reference: message.customer_reference.toString(),
@@ -44,7 +45,7 @@ export async function putMessageToDB(message: any, identifier: string) {
 export async function checkMessageExistence(hash: string): Promise<boolean> {
   console.log('Checking if message has already been processed');
   const params: DocumentClient.GetItemInput = {
-    TableName: 'processed_data',
+    TableName: dynamoDBTableName,
     Key: {
       hash: hash,
     },

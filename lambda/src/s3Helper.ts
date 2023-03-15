@@ -1,6 +1,7 @@
 import { S3 } from 'aws-sdk';
-import { Customer, Item, Order, recordTypes, ParsedData } from './dataModel';
+import { recordTypes, ParsedData } from './dataModel';
 import Papa from 'papaparse';
+import { region } from '../config';
 
 /**
  * Retrieves the content of an S3 object as a string.
@@ -40,7 +41,7 @@ export async function fetchAndParseCsvDataFromS3(
 ): Promise<ParsedData> {
   console.log('Fetching .csv files from S3');
   try {
-    const s3 = new S3({ apiVersion: '2006-03-01', region: 'eu-west-2' });
+    const s3 = new S3({ apiVersion: '2006-03-01', region: region });
 
     const dataPromises = recordTypes.map(async ({ keyPrefix, fields }) => {
       const csvContent: string = await getObjectContent(
@@ -71,7 +72,7 @@ export async function allRequiredFilesExist(
   key: string,
 ): Promise<boolean> {
   console.log('Checking if all required files exist');
-  const s3 = new S3({ apiVersion: '2006-03-01', region: 'eu-west-2' });
+  const s3 = new S3({ apiVersion: '2006-03-01', region: region });
   const customerKey = `customers_${key.split('_')[1]}`;
   const orderKey = `orders_${key.split('_')[1]}`;
   const itemKey = `items_${key.split('_')[1]}`;

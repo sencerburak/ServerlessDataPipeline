@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+
 provider "aws" {
   region = var.region
 }
@@ -5,10 +14,18 @@ provider "aws" {
 resource "aws_s3_bucket" "input_bucket" {
   bucket = var.bucket_name
   acl    = "private"
+
+  tags = merge(local.common_tags, {
+    ResourceType = "S3Bucket"
+  })
 }
 
 resource "aws_sqs_queue" "output_queue" {
   name = var.queue_name
+
+  tags = merge(local.common_tags, {
+    ResourceType = "SQSQueue"
+  })
 }
 
 resource "aws_dynamodb_table" "processed_data" {
@@ -36,14 +53,22 @@ resource "aws_dynamodb_table" "processed_data" {
     read_capacity   = 1
     projection_type = "ALL"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  tags = merge(local.common_tags, {
+    ResourceType = "DynamoDBTable"
+  })
 }
 
 resource "aws_iam_user" "uploader" {
-  name = "uploader"
+  name = "lambda-user"
 
-  tags = {
-    Name = "S3 Uploader"
-  }
+  tags = merge(local.common_tags, {
+    ResourceType = "IAMUser"
+  })
 }
 
 resource "aws_iam_role" "lambda_role" {
@@ -62,9 +87,9 @@ resource "aws_iam_role" "lambda_role" {
     ]
   })
 
-  tags = {
-    Name = "Lambda Role"
-  }
+  tags = merge(local.common_tags, {
+    ResourceType = "IAMRole"
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic_role" {
@@ -96,13 +121,13 @@ resource "aws_lambda_permission" "allow_bucket" {
 }
 
 resource "aws_lambda_function" "processor" {
-  filename      = "csv-parser.zip"
-  function_name = var.lambda_function_name
+  filename      = var.lambda_config.filename
+  function_name = var.lambda_config.function_name
   role          = aws_iam_role.lambda_role.arn
-  handler       = var.lambda_handler
-  runtime       = var.lambda_runtime
-  memory_size   = var.lambda_memory_size
-  timeout       = var.lambda_timeout
+  handler       = var.lambda_config.handler
+  runtime       = var.lambda_config.runtime
+  memory_size   = var.lambda_config.memory_size
+  timeout       = var.lambda_config.timeout
   environment {
     variables = {
       S3_BUCKET      = aws_s3_bucket.input_bucket.id
@@ -110,6 +135,10 @@ resource "aws_lambda_function" "processor" {
       DYNAMODB_TABLE = aws_dynamodb_table.processed_data.name
     }
   }
+
+  tags = merge(local.common_tags, {
+    ResourceType = "LambdaFunction"
+  })
 }
 
 resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
@@ -131,4 +160,8 @@ resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/${aws_lambda_function.processor.function_name}"
   retention_in_days = 30
+
+  tags = merge(local.common_tags, {
+    ResourceType = "CloudWatchLogGroup"
+  })
 }

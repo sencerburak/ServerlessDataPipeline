@@ -19,7 +19,7 @@ import {
 export const handler: S3Handler = async (event, _context) => {
   try {
     console.log('Received event:', JSON.stringify(event, null, 2));
-    await waitAndCountdown(5000);
+    // await waitAndCountdown(1000);
     const bucket = event.Records[0].s3.bucket.name;
     const key = decodeURIComponent(
       event.Records[0].s3.object.key.replace(/\+/g, ' '),

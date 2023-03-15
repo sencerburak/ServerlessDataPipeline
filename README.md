@@ -33,13 +33,45 @@ Before using this project, you will need to set up the following prerequisites:
 
 To deploy the project, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/sencerb88/ServerlessDataPipeline.git`
-2. Navigate to the `lambda` directory: `cd ServerlessDataPipeline/lambda`
-3. Install the required dependencies: `npm install`
-4. Test the code: `npm run test`
-4. Build & create a zip file of the Lambda code: `npm run build && npm run package`
-5. Initialize Terraform: `npm run tf-init`
-6. Apply the Terraform code: `npm run tf-apply`
+1. Clone the repository: 
+```sh
+git clone https://github.com/sencerb88/ServerlessDataPipeline.git
+```
+2. Navigate to the `lambda` directory: 
+```sh
+cd ServerlessDataPipeline/lambda
+```
+3. Install the required dependencies: 
+```sh
+npm install
+```
+4. Test the code: 
+```sh
+npm run test
+```
+5. Deploy:
+```sh
+npm run deploy
+```
+
+Or deploy step by step
+
+1. Build the Lambda code: 
+```sh
+npm run build
+```
+2. Package the Lambda code as a .zip file: 
+```sh
+npm run package
+```
+3. Initialize Terraform: 
+```sh
+npm run tf-init
+```
+4. Apply the Terraform code: 
+```sh
+npm run tf-apply
+```
 
 ## Usage
 

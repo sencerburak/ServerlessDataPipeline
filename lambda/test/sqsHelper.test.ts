@@ -1,3 +1,4 @@
+import { sqsQueueUrl } from '../config';
 import { sendSQSMessage } from '../src/sqsHelper';
 
 const SQSMock = {
@@ -36,7 +37,7 @@ describe('sendSQSMessage', () => {
     );
     expect(SQSMock.sendMessage).toHaveBeenCalledWith({
       MessageBody: JSON.stringify(message),
-      QueueUrl: 'https://sqs.eu-west-2.amazonaws.com/264231384781/output-queue',
+      QueueUrl: sqsQueueUrl,
     });
   });
 });
