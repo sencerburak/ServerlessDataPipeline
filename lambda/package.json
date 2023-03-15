@@ -18,6 +18,7 @@
     "tf-format": "terraform -chdir='../infra/' fmt",
     "test": "jest test/*.test.ts",
     "build": "npx tsc",
+    "deploy": "npm run build && npm run package && npm run tf-apply",
     "prettier": "prettier -w '*.ts' 'src/**/*.ts' 'test/**/*.ts'",
     "format": "npm run prettier && npm run tf-format",
     "package": "rm ../infra/processor.zip && zip -r ../infra/processor.zip node_modules && cd dist && zip -r ../../infra/processor.zip *"
